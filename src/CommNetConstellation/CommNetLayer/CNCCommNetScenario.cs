@@ -18,7 +18,7 @@ namespace CommNetConstellation.CommNetLayer
         //TODO: investigate to add extra ground stations to the group of existing stations
 
         private CNCCommNetUI CustomCommNetUI = null;
-        private CNCCommNetNetwork CustomCommNetNetwork = null;
+        private CommNetNetwork CustomCommNetNetwork = null;
         public List<Constellation> constellations; // leave the initialisation to OnLoad()
         public List<CNCCommNetHome> groundStations; // leave the initialisation to OnLoad()
         private List<CNCCommNetHome> persistentGroundStations; // leave the initialisation to OnLoad()
@@ -45,11 +45,16 @@ namespace CommNetConstellation.CommNetLayer
             UnityEngine.Object.Destroy(ui);
 
             //Replace the CommNet network
+            // Use CommNetCoop's methods:
+            CommNetManagerAPI.CommNetManagerChecker.SetCommNetManagerIfAvailable(this, typeof(CNCCommNetNetwork), out CustomCommNetNetwork);
+            /*
             CommNetNetwork net = FindObjectOfType<CommNetNetwork>();
             CustomCommNetNetwork = gameObject.AddComponent<CNCCommNetNetwork>();
             UnityEngine.Object.Destroy(net);
             //CommNetNetwork.Instance.GetType().GetMethod("set_Instance").Invoke(CustomCommNetNetwork, null); // reflection to bypass Instance's protected set // don't seem to work
+            */
 
+            /*
             //Replace the CommNet ground stations
             groundStations = new List<CNCCommNetHome>();
             CommNetHome[] homes = FindObjectsOfType<CommNetHome>();
@@ -80,6 +85,8 @@ namespace CommNetConstellation.CommNetLayer
                 customBody.copyOf(bodies[i]);
                 UnityEngine.Object.Destroy(bodies[i]);
             }
+            */
+            CommNetManagerAPI.AssemblyChecker.SetCommNetTypes();
 
             CNCLog.Verbose("CommNet Scenario loading done! ");
         }
@@ -249,8 +256,7 @@ namespace CommNetConstellation.CommNetLayer
         {
             cacheCommNetVessels();
 
-            return commVessels.Find(x => CNCCommNetwork.AreSame(x.Comm, commNode)).Vessel; // more specific equal
-            //IEqualityComparer<CommNode> comparer = commNode.Comparer; // a combination of third-party mods somehow  affects CommNode's IEqualityComparer on two objects
+            return commVessels.Find(x => CNCCommNetwork.AreSame(x.CommNetVessel.Comm, commNode)).Vessel; // more specific equal            //IEqualityComparer<CommNode> comparer = commNode.Comparer; // a combination of third-party mods somehow  affects CommNode's IEqualityComparer on two objects
             //return commVessels.Find(x => comparer.Equals(commNode, x.Comm)).Vessel;
         }
 
@@ -279,7 +285,7 @@ namespace CommNetConstellation.CommNetLayer
                 if (allVessels[i].connection != null && allVessels[i].vesselType != VesselType.Unknown)// && allVessels[i].vesselType != VesselType.Debris) // debris could be spent stage with functional probes and antennas
                 {
                     CNCLog.Debug("Caching CommNetVessel '{0}'", allVessels[i].vesselName);
-                    this.commVessels.Add(allVessels[i].connection as CNCCommNetVessel);
+                    this.commVessels.Add(((CommNetManagerAPI.ModularCommNetVessel)allVessels[i].connection).GetModuleOfType<CNCCommNetVessel>());
                 }
             }
 

@@ -1,5 +1,6 @@
 ﻿using CommNet;
 using System;
+using CommNetManagerAPI;
 using System.Collections.Generic;
 
 namespace CommNetConstellation.CommNetLayer
@@ -29,6 +30,8 @@ namespace CommNetConstellation.CommNetLayer
         /// <summary>
         /// Edit the connectivity between two potential nodes
         /// </summary>
+        [CNMAttrAndOr(CNMAttrAndOr.options.AND)]
+        [CNMAttrSequence(CNMAttrSequence.options.LATE)]
         protected override bool SetNodeConnection(CommNode a, CommNode b)
         {
             //stop links between ground stations
@@ -57,7 +60,8 @@ namespace CommNetConstellation.CommNetLayer
             {
                 if (bFreqs.Contains(aFreqs[i])) // yes, it does
                 {
-                    return base.SetNodeConnection(a, b);
+                    //return base.SetNodeConnection(a, b);
+                    return CommNetManagerChecker.CommNetManagerInstalled ? true : base.SetNodeConnection(a, b);
                 }
             }
 

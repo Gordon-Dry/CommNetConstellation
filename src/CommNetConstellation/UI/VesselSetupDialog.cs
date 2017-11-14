@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using CommNetConstellation.UI.VesselMgtTools;
+using CommNetManagerAPI;
 
 namespace CommNetConstellation.UI
 {

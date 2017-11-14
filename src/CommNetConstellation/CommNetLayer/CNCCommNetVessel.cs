@@ -66,7 +66,7 @@ namespace CommNetConstellation.CommNetLayer
     /// <summary>
     /// Data structure for a CommNetVessel
     /// </summary>
-    public class CNCCommNetVessel : CommNetVessel, IPersistenceSave, IPersistenceLoad
+    public class CNCCommNetVessel : CommNetManagerAPI.ModularCommNetVesselComponent, IPersistenceSave, IPersistenceLoad
     {
         public enum FrequencyListOperation
         {
@@ -642,7 +642,7 @@ namespace CommNetConstellation.CommNetLayer
                         ProtoPartModuleSnapshot cncModule;
                         if ((cncModule = parts[i].FindModule("CNConstellationModule")) == null) //check if CNConstellationModule is there
                         {
-                            CNConstellationModule realcncModule = gameObject.AddComponent<CNConstellationModule>(); // don't use new keyword. PartModule is Monobehavior
+                            CNConstellationModule realcncModule = this.CommNetVessel.gameObject.AddComponent<CNConstellationModule>(); // don't use new keyword. PartModule is Monobehavior
                             parts[i].modules.Add(new ProtoPartModuleSnapshot(realcncModule));
 
                             CNCLog.Verbose("CNConstellationModule is added to CommNet Vessel '{0}'", thisVessel.GetName());
