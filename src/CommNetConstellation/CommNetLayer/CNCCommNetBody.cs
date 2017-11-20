@@ -7,5 +7,6 @@ namespace CommNetConstellation.CommNetLayer
     /// </summary>
     public class CNCCommNetBody : CommNetManagerAPI.CNMBodyComponent
     {
+        //TODO: delete this whole class after test
     }
 }

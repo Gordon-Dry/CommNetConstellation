@@ -22,13 +22,13 @@ namespace CommNetConstellation.CommNetLayer
         [Persistent] protected string OptionalName = "";
         [Persistent(collectionIndex = "Frequency")] public List<short> Frequencies = new List<short>(new short[] { CNCSettings.Instance.PublicRadioFrequency });
 
-        public double altitude { get { return this.alt; } }
-        public double latitude { get { return this.lat; } }
-        public double longitude { get { return this.lon; } }
-        public CommNode commNode { get { return this.comm; } }
+        public double altitude { get { return this.CommNetHome.Alt; } }
+        public double latitude { get { return this.CommNetHome.Lat; } }
+        public double longitude { get { return this.CommNetHome.Lon; } }
+        public CommNode commNode { get { return this.CommNetHome.Comm; } }
         public string stationName
         {
-            get { return (this.OptionalName.Length == 0)? this.nodeName : this.OptionalName; }
+            get { return (this.OptionalName.Length == 0)? this.CommNetHome.nodeName : this.OptionalName; }
             set { this.OptionalName = value; }
         }
 
@@ -37,12 +37,6 @@ namespace CommNetConstellation.CommNetLayer
             CNCLog.Verbose("CommNet Home '{0}' added", stockHome.nodeName);
 
             this.ID = stockHome.nodeName;
-            this.nodeName = stockHome.nodeName;
-            this.nodeTransform = stockHome.nodeTransform;
-            this.isKSC = stockHome.isKSC;
-            this.body = stockHome.GetComponentInParent<CelestialBody>();
-
-            //comm, lat, alt, lon are initialised by CreateNode() later
 
             groundStationHeadline = new GUIStyle(HighLogic.Skin.label)
             {

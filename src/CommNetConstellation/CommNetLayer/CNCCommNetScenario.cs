@@ -1,4 +1,5 @@
 ﻿using CommNet;
+using CommNetManagerAPI;
 using System.Collections.Generic;
 
 namespace CommNetConstellation.CommNetLayer
@@ -45,14 +46,8 @@ namespace CommNetConstellation.CommNetLayer
             UnityEngine.Object.Destroy(ui);
 
             //Replace the CommNet network
-            // Use CommNetCoop's methods:
+            // Use CommNetManager's methods:
             CommNetManagerAPI.CommNetManagerChecker.SetCommNetManagerIfAvailable(this, typeof(CNCCommNetNetwork), out CustomCommNetNetwork);
-            /*
-            CommNetNetwork net = FindObjectOfType<CommNetNetwork>();
-            CustomCommNetNetwork = gameObject.AddComponent<CNCCommNetNetwork>();
-            UnityEngine.Object.Destroy(net);
-            //CommNetNetwork.Instance.GetType().GetMethod("set_Instance").Invoke(CustomCommNetNetwork, null); // reflection to bypass Instance's protected set // don't seem to work
-            */
 
             /*
             //Replace the CommNet ground stations
@@ -65,7 +60,11 @@ namespace CommNetConstellation.CommNetLayer
                 UnityEngine.Object.Destroy(homes[i]);
                 groundStations.Add(customHome);
             }
-            groundStations.Sort();
+            
+            */
+            //CommNetManagerAPI.CNMHome
+            //groundStations.Sort();
+
 
             //Apply the ground-station changes from persistent.sfs
             for (int i=0; i<persistentGroundStations.Count;i++)
@@ -77,15 +76,6 @@ namespace CommNetConstellation.CommNetLayer
             }
             persistentGroundStations.Clear();//dont need anymore
 
-            //Replace the CommNet celestial bodies
-            CommNetBody[] bodies = FindObjectsOfType<CommNetBody>();
-            for (int i = 0; i < bodies.Length; i++)
-            {
-                CNCCommNetBody customBody = bodies[i].gameObject.AddComponent(typeof(CNCCommNetBody)) as CNCCommNetBody;
-                customBody.copyOf(bodies[i]);
-                UnityEngine.Object.Destroy(bodies[i]);
-            }
-            */
             CommNetManagerAPI.AssemblyChecker.SetCommNetTypes();
 
             CNCLog.Verbose("CommNet Scenario loading done! ");
@@ -285,7 +275,7 @@ namespace CommNetConstellation.CommNetLayer
                 if (allVessels[i].connection != null && allVessels[i].vesselType != VesselType.Unknown)// && allVessels[i].vesselType != VesselType.Debris) // debris could be spent stage with functional probes and antennas
                 {
                     CNCLog.Debug("Caching CommNetVessel '{0}'", allVessels[i].vesselName);
-                    this.commVessels.Add(((CommNetManagerAPI.ModularCommNetVessel)allVessels[i].connection).GetModuleOfType<CNCCommNetVessel>());
+                    this.commVessels.Add(((ModularCommNetVessel)allVessels[i].connection).GetModuleOfType<CNCCommNetVessel>());
                 }
             }
 
@@ -322,7 +312,8 @@ namespace CommNetConstellation.CommNetLayer
             }
             else
             {
-                aFreqs = ((CNCCommNetVessel)findCorrespondingVessel(a).Connection).getFrequencies();
+                var cncvessel = ((ModularCommNetVessel)a.GetVessel().Connection).GetModuleOfType<CNCCommNetVessel>();
+                aFreqs = cncvessel.getFrequencies();
             }
 
             return aFreqs;
@@ -341,7 +332,8 @@ namespace CommNetConstellation.CommNetLayer
             }
             else
             {
-                power = ((CNCCommNetVessel)findCorrespondingVessel(a).Connection).getMaxComPower(frequency);
+                var cncvessel = ((ModularCommNetVessel)a.GetVessel().Connection).GetModuleOfType<CNCCommNetVessel>();
+                power = cncvessel.getMaxComPower(frequency);
             }
 
             return power;

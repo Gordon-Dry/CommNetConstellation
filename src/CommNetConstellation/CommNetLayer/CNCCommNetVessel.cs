@@ -115,10 +115,8 @@ namespace CommNetConstellation.CommNetLayer
             }
         }
 
-        protected override void OnDestroy()
+        protected void OnDestroy() //TODO: validate it gets called
         {
-            base.OnDestroy();
-
             if (HighLogic.CurrentGame == null)
                 return;
             //if (HighLogic.LoadedScene != GameScenes.FLIGHT)
@@ -401,11 +399,9 @@ namespace CommNetConstellation.CommNetLayer
         /// </summary>
         protected override void UpdateComm()
         {
-            base.UpdateComm();
-
-            this.comm.antennaTransmit.power = getMaxComPower(this.strongestFreq);
-            this.comm.antennaTransmit.power *= (double)HighLogic.CurrentGame.Parameters.CustomParams<CommNetParams>().rangeModifier;
-            this.comm.antennaRelay.power *= (double)HighLogic.CurrentGame.Parameters.CustomParams<CommNetParams>().rangeModifier;
+            this.CommNetVessel.Comm.antennaTransmit.power = getMaxComPower(this.strongestFreq);
+            this.CommNetVessel.Comm.antennaTransmit.power *= (double)HighLogic.CurrentGame.Parameters.CustomParams<CommNetParams>().rangeModifier;
+            this.CommNetVessel.Comm.antennaRelay.power *= (double)HighLogic.CurrentGame.Parameters.CustomParams<CommNetParams>().rangeModifier;
         }
 
         /// <summary>

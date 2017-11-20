@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using CommNet;
 using UnityEngine;
 using TMPro;
 using CommNetConstellation.CommNetLayer;
@@ -15,7 +14,7 @@ namespace CommNetConstellation.UI.VesselMgtTools
         private DialogGUIImage constellationColorImage;
         private bool membershipOption;
 
-        public VanillaFreqTool(CommNetVessel thisVessel, Callback updateFreqRowsCallback) : base(thisVessel, "vanilla", "Master frequency", new List<Callback>() { updateFreqRowsCallback })
+        public VanillaFreqTool(CNCCommNetVessel thisVessel, Callback updateFreqRowsCallback) : base(thisVessel, "vanilla", "Master frequency", new List<Callback>() { updateFreqRowsCallback })
         {
         }
 

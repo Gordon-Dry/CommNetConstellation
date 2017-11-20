@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System;
 using TMPro;
+using CommNetManagerAPI;
 
 namespace CommNetConstellation.UI
 {
@@ -14,6 +15,7 @@ namespace CommNetConstellation.UI
     {
         private CNConstellationAntennaModule antennaModule;
         private Vessel hostVessel; // could be null (in editor)
+        private CNCCommNetVessel cncVessel = null;
         private string description = "Something";
 
         private DialogGUITextInput frequencyInput;
@@ -31,6 +33,7 @@ namespace CommNetConstellation.UI
                                                                                     new DialogOptions[] { DialogOptions.HideCloseButton})
         {
             this.hostVessel = vessel;
+            this.cncVessel = ((ModularCommNetVessel)hostVessel.Connection).GetModuleOfType<CNCCommNetVessel>();
             this.antennaModule = antennaPart.FindModuleImplementing<CNConstellationAntennaModule>();
             this.description = string.Format("You are configuring this antenna '{0}'.", antennaPart.partInfo.title);
 
@@ -157,7 +160,6 @@ namespace CommNetConstellation.UI
                     {
                         if (this.hostVessel != null)
                         {
-                            CNCCommNetVessel cncVessel = (CNCCommNetVessel)this.hostVessel.Connection;
                             cncVessel.OnAntennaChange();
                         }
 
