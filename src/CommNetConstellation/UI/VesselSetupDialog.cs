@@ -34,7 +34,7 @@ namespace CommNetConstellation.UI
                                                                                                                 new DialogOptions[] {})
         {
             this.hostVessel = vessel;
-            this.cncVessel = ((ModularCommNetVessel)hostVessel.Connection).GetModuleOfType<CNCCommNetVessel>();
+            this.cncVessel = ((IModularCommNetVessel)hostVessel.Connection).GetModuleOfType<CNCCommNetVessel>();
             this.updateCallback = updateCallback;
             this.description = string.Format("Active frequencies allow this vessel '{0}' to talk with other vessels, which share one or more of these frequencies.", this.hostVessel.vesselName);
 

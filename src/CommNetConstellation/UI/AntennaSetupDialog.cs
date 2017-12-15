@@ -33,7 +33,7 @@ namespace CommNetConstellation.UI
                                                                                     new DialogOptions[] { DialogOptions.HideCloseButton})
         {
             this.hostVessel = vessel;
-            this.cncVessel = ((ModularCommNetVessel)hostVessel.Connection).GetModuleOfType<CNCCommNetVessel>();
+            this.cncVessel = ((IModularCommNetVessel)hostVessel.Connection).GetModuleOfType<CNCCommNetVessel>();
             this.antennaModule = antennaPart.FindModuleImplementing<CNConstellationAntennaModule>();
             this.description = string.Format("You are configuring this antenna '{0}'.", antennaPart.partInfo.title);
 

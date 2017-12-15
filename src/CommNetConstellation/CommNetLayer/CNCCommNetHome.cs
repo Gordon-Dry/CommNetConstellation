@@ -22,17 +22,17 @@ namespace CommNetConstellation.CommNetLayer
         [Persistent] protected string OptionalName = "";
         [Persistent(collectionIndex = "Frequency")] public List<short> Frequencies = new List<short>(new short[] { CNCSettings.Instance.PublicRadioFrequency });
 
-        public double altitude { get { return this.CommNetHome.Alt; } }
-        public double latitude { get { return this.CommNetHome.Lat; } }
-        public double longitude { get { return this.CommNetHome.Lon; } }
-        public CommNode commNode { get { return this.CommNetHome.Comm; } }
+        public double altitude { get { return ((ICNMHome)this.CommNetHome).Alt; } }
+        public double latitude { get { return ((ICNMHome)this.CommNetHome).Lat; } }
+        public double longitude { get { return ((ICNMHome)this.CommNetHome).Lon; } }
+        public CommNode commNode { get { return ((ICNMHome)this.CommNetHome).Comm; } }
         public string stationName
         {
             get { return (this.OptionalName.Length == 0)? this.CommNetHome.nodeName : this.OptionalName; }
             set { this.OptionalName = value; }
         }
 
-        public override void Initialize(CNMHome stockHome)
+        public override void Initialize(CommNetHome stockHome)
         {
             CNCLog.Verbose("CommNet Home '{0}' added", stockHome.nodeName);
 
@@ -97,10 +97,10 @@ namespace CommNetConstellation.CommNetLayer
             Vector3 position = PlanetariumCamera.Camera.WorldToScreenPoint(worldPos);
             Rect groundStationRect = new Rect((position.x - 8), (Screen.height - position.y) - 8, 16, 16);
 
-            if (isOccluded(CommNetHome.nodeTransform.transform.position, this.CommNetHome.Body))
+            if (isOccluded(CommNetHome.nodeTransform.transform.position, ((ICNMHome)this.CommNetHome).Body))
                 return;
 
-            if (!isOccluded(CommNetHome.nodeTransform.transform.position, this.CommNetHome.Body) && this.IsCamDistanceToWide(CommNetHome.nodeTransform.transform.position))
+            if (!isOccluded(CommNetHome.nodeTransform.transform.position, ((ICNMHome)this.CommNetHome).Body) && this.IsCamDistanceToWide(CommNetHome.nodeTransform.transform.position))
                 return;
 
             //draw the dot

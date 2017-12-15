@@ -65,7 +65,7 @@ namespace CommNetConstellation.CommNetLayer
             //CommNetManagerAPI.CNMHome
             //groundStations.Sort();
 
-
+            /*
             //Apply the ground-station changes from persistent.sfs
             for (int i=0; i<persistentGroundStations.Count;i++)
             {
@@ -75,8 +75,10 @@ namespace CommNetConstellation.CommNetLayer
                 }
             }
             persistentGroundStations.Clear();//dont need anymore
+            */
 
-            CommNetManagerAPI.AssemblyChecker.SetCommNetTypes();
+            CommNetManagerAPI.ICommNetManager CNM = (CommNetManagerAPI.ICommNetManager)CommNetManagerAPI.CommNetManagerChecker.GetCommNetManagerInstance();
+            CNM.SetCommNetTypes();
 
             CNCLog.Verbose("CommNet Scenario loading done! ");
         }
@@ -275,7 +277,7 @@ namespace CommNetConstellation.CommNetLayer
                 if (allVessels[i].connection != null && allVessels[i].vesselType != VesselType.Unknown)// && allVessels[i].vesselType != VesselType.Debris) // debris could be spent stage with functional probes and antennas
                 {
                     CNCLog.Debug("Caching CommNetVessel '{0}'", allVessels[i].vesselName);
-                    this.commVessels.Add(((ModularCommNetVessel)allVessels[i].connection).GetModuleOfType<CNCCommNetVessel>());
+                    this.commVessels.Add(((IModularCommNetVessel)allVessels[i].connection).GetModuleOfType<CNCCommNetVessel>());
                 }
             }
 
@@ -312,7 +314,7 @@ namespace CommNetConstellation.CommNetLayer
             }
             else
             {
-                var cncvessel = ((ModularCommNetVessel)a.GetVessel().Connection).GetModuleOfType<CNCCommNetVessel>();
+                var cncvessel = ((IModularCommNetVessel)a.GetVessel().Connection).GetModuleOfType<CNCCommNetVessel>();
                 aFreqs = cncvessel.getFrequencies();
             }
 
@@ -332,7 +334,7 @@ namespace CommNetConstellation.CommNetLayer
             }
             else
             {
-                var cncvessel = ((ModularCommNetVessel)a.GetVessel().Connection).GetModuleOfType<CNCCommNetVessel>();
+                var cncvessel = ((IModularCommNetVessel)a.GetVessel().Connection).GetModuleOfType<CNCCommNetVessel>();
                 power = cncvessel.getMaxComPower(frequency);
             }
 

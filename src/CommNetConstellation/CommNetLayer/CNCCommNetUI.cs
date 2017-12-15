@@ -81,7 +81,7 @@ namespace CommNetConstellation.CommNetLayer
         /// </summary>
         private void OnMapNodeUpdateVisible(MapNode node, MapNode.IconData iconData)
         {
-            CNCCommNetVessel thisVessel = ((ModularCommNetVessel)node.mapObject.vessel.connection).GetModuleOfType<CNCCommNetVessel>();
+            CNCCommNetVessel thisVessel = ((IModularCommNetVessel)node.mapObject.vessel.connection).GetModuleOfType<CNCCommNetVessel>();
 
             if(thisVessel != null && node.mapObject.type == MapObject.ObjectType.Vessel)
             {
@@ -103,8 +103,6 @@ namespace CommNetConstellation.CommNetLayer
             short strongestFreq = -1;
             double longestRange = 0.0;
 
-            CNCCommNetVessel vesselA = ((ModularCommNetVessel)a.GetVessel().Connection).GetModuleOfType<CNCCommNetVessel>();
-            CNCCommNetVessel vesselB = ((ModularCommNetVessel)b.GetVessel().Connection).GetModuleOfType<CNCCommNetVessel>();
             for (int i = 0; i < commonFreqs.Count; i++)
             {
                 short thisFreq = commonFreqs[i];
