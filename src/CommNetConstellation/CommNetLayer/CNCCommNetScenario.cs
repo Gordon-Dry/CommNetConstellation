@@ -1,5 +1,6 @@
 ﻿using CommNet;
 using CommNetManagerAPI;
+using System;
 using System.Collections.Generic;
 
 namespace CommNetConstellation.CommNetLayer
@@ -22,7 +23,7 @@ namespace CommNetConstellation.CommNetLayer
         private CommNetNetwork CustomCommNetNetwork = null;
         public List<Constellation> constellations; // leave the initialisation to OnLoad()
         public List<CNCCommNetHome> groundStations; // leave the initialisation to OnLoad()
-        private List<CNCCommNetHome> persistentGroundStations; // leave the initialisation to OnLoad()
+        private List<CNCCommNetHomeData> persistentGroundStations; // leave the initialisation to OnLoad()
         private List<CNCCommNetVessel> commVessels;
         private bool dirtyCommNetVesselList;
 
@@ -34,38 +35,30 @@ namespace CommNetConstellation.CommNetLayer
 
         protected override void Start()
         {
+            if (!CommNetManagerChecker.CommNetManagerInstalled)
+            {
+                CNCLog.Error("CommNet Manager is not installed! Please download and install this to use CommNet Constellation.");
+                return;
+            }
+
+            CNCLog.Verbose("CommNet Scenario loading ...");
+
             CNCCommNetScenario.Instance = this;
             this.commVessels = new List<CNCCommNetVessel>();
             this.dirtyCommNetVesselList = true;
 
-            CNCLog.Verbose("CommNet Scenario loading ...");
-
             //Replace the CommNet user interface
             CommNetUI ui = FindObjectOfType<CommNetUI>(); // the order of the three lines is important
             CustomCommNetUI = gameObject.AddComponent<CNCCommNetUI>(); // gameObject.AddComponent<>() is "new" keyword for Monohebaviour class
-            UnityEngine.Object.Destroy(ui);
+            UnityEngine.Object.DestroyImmediate(ui);
 
-            //Replace the CommNet network
-            // Use CommNetManager's methods:
-            CommNetManagerAPI.CommNetManagerChecker.SetCommNetManagerIfAvailable(this, typeof(CNCCommNetNetwork), out CustomCommNetNetwork);
+            //Request for CommNet network
+            CommNetManagerChecker.SetCommNetManagerIfAvailable(this, typeof(CNCCommNetNetwork), out CustomCommNetNetwork);
 
-            /*
-            //Replace the CommNet ground stations
-            groundStations = new List<CNCCommNetHome>();
-            CommNetHome[] homes = FindObjectsOfType<CommNetHome>();
-            for(int i=0; i<homes.Length; i++)
-            {
-                CNCCommNetHome customHome = homes[i].gameObject.AddComponent(typeof(CNCCommNetHome)) as CNCCommNetHome;
-                customHome.copyOf(homes[i]);
-                UnityEngine.Object.Destroy(homes[i]);
-                groundStations.Add(customHome);
-            }
-            
-            */
-            //CommNetManagerAPI.CNMHome
-            //groundStations.Sort();
+            //Request for CommNet bodies and homes
+            ICommNetManager CNM = (ICommNetManager)CommNetManagerChecker.GetCommNetManagerInstance();
+            CNM.SetCommNetTypes();
 
-            /*
             //Apply the ground-station changes from persistent.sfs
             for (int i=0; i<persistentGroundStations.Count;i++)
             {
@@ -75,12 +68,24 @@ namespace CommNetConstellation.CommNetLayer
                 }
             }
             persistentGroundStations.Clear();//dont need anymore
-            */
-
-            CommNetManagerAPI.ICommNetManager CNM = (CommNetManagerAPI.ICommNetManager)CommNetManagerAPI.CommNetManagerChecker.GetCommNetManagerInstance();
-            CNM.SetCommNetTypes();
 
             CNCLog.Verbose("CommNet Scenario loading done! ");
+        }
+
+        public void registerGroundStation(CNCCommNetHome thisHome)
+        {
+            if(this.groundStations == null)
+            {
+                this.groundStations = new List<CNCCommNetHome>();
+            }
+
+            if (this.groundStations.Exists(x => x.ID.Equals(thisHome.ID)))
+            {
+                return;
+            }
+
+            this.groundStations.Add(thisHome);
+            this.groundStations.Sort();
         }
 
         public override void OnAwake()
@@ -101,6 +106,8 @@ namespace CommNetConstellation.CommNetLayer
 
             this.constellations.Clear();
             this.commVessels.Clear();
+            this.groundStations.Clear();
+            this.persistentGroundStations.Clear();
 
             GameEvents.onVesselCreate.Remove(new EventData<Vessel>.OnEvent(this.onVesselCountChanged));
             GameEvents.onVesselDestroy.Remove(new EventData<Vessel>.OnEvent(this.onVesselCountChanged));
@@ -144,7 +151,8 @@ namespace CommNetConstellation.CommNetLayer
             constellations.Sort();
 
             //Ground stations
-            persistentGroundStations = new List<CNCCommNetHome>();
+            groundStations = new List<CNCCommNetHome>();
+            persistentGroundStations = new List<CNCCommNetHomeData>();
             if (gameNode.HasNode("GroundStations"))
             {
                 ConfigNode rootNode = gameNode.GetNode("GroundStations");
@@ -159,14 +167,13 @@ namespace CommNetConstellation.CommNetLayer
                 {
                     for (int i = 0; i < stationNodes.Length; i++)
                     {
-                        CNCCommNetHome dummyGroundStation = new CNCCommNetHome();
-                        ConfigNode.LoadObjectFromConfig(dummyGroundStation, stationNodes[i]);
-                        persistentGroundStations.Add(dummyGroundStation);
-
+                        CNCCommNetHomeData stationData = new CNCCommNetHomeData();
+                        ConfigNode.LoadObjectFromConfig(stationData, stationNodes[i]);
                         if(!stationNodes[i].HasNode("Frequencies")) // empty list is not saved as empty node in persistent.sfs
                         {
-                            dummyGroundStation.Frequencies.Clear();// clear the default frequency list
+                            stationData.Frequencies.Clear();// clear the default frequency list
                         }
+                        persistentGroundStations.Add(stationData);
                     }
                     ConfigNode.LoadObjectFromConfig(this, rootNode);
                 }

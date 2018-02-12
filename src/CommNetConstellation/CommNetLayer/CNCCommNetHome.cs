@@ -8,6 +8,18 @@ using UnityEngine;
 namespace CommNetConstellation.CommNetLayer
 {
     /// <summary>
+    /// Simple data structure to store persistent.sfs data of CNCCommNetHome temporarily
+    /// CNCCommNetHome is subclass of Monobehaviour so initialisation is out of question because it will create duplicate instance
+    /// </summary>
+    public class CNCCommNetHomeData
+    {
+        [Persistent] public string ID;
+        [Persistent] public Color Color;
+        [Persistent] public string OptionalName;
+        [Persistent(collectionIndex = "Frequency")] public List<short> Frequencies;
+    }
+
+    /// <summary>
     /// Customise the home nodes
     /// </summary>
     public class CNCCommNetHome : CommNetManagerAPI.CNMHomeComponent, IComparable<CNCCommNetHome>
@@ -34,6 +46,16 @@ namespace CommNetConstellation.CommNetLayer
 
         public override void Initialize(CommNetHome stockHome)
         {
+            if(CNCCommNetScenario.Instance == null)
+            {
+                return;
+            }
+            else if(CNCCommNetScenario.Instance.groundStations.Exists(x => x.ID.Equals(stockHome.nodeName)))
+            {
+                CNCLog.Verbose("CommNet Home '{0}' already exists!", stockHome.nodeName);
+                //return;
+            }
+
             CNCLog.Verbose("CommNet Home '{0}' added", stockHome.nodeName);
 
             this.ID = stockHome.nodeName;
@@ -45,16 +67,23 @@ namespace CommNetConstellation.CommNetLayer
             };
 
             loadCompleted = true;
+            CNCCommNetScenario.Instance.registerGroundStation(this);
         }
 
         /// <summary>
         /// Apply the changes from persistent.sfs
         /// </summary>
-        public void applySavedChanges(CNCCommNetHome stationSnapshot)
+        public void applySavedChanges(CNCCommNetHomeData stationDataSnapshot)
         {
-            this.Color = stationSnapshot.Color;
-            this.Frequencies = stationSnapshot.Frequencies;
-            this.OptionalName = stationSnapshot.OptionalName;
+            if(!this.ID.Equals(stationDataSnapshot.ID))
+            {
+                CNCLog.Error("Mismatched ID when applying persistent data of '{1}' to Ground Station '{0}'!", this.ID, stationDataSnapshot.ID);
+                return;
+            }
+
+            this.Color = stationDataSnapshot.Color;
+            this.Frequencies = stationDataSnapshot.Frequencies;
+            this.OptionalName = stationDataSnapshot.OptionalName;
         }
 
         /// <summary>
