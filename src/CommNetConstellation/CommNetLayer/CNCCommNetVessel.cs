@@ -115,7 +115,7 @@ namespace CommNetConstellation.CommNetLayer
             }
         }
 
-        protected void OnDestroy() //TODO: validate it gets called
+        protected void OnDestroy()
         {
             if (HighLogic.CurrentGame == null)
                 return;
@@ -675,7 +675,7 @@ namespace CommNetConstellation.CommNetLayer
 
         protected override void OnSave(ConfigNode gameNode)
         {
-            base.OnSave(gameNode);
+            //base.OnSave(gameNode); //unnecessary since CNM manages this at top level
 
             if (gameNode.HasNode(GetType().FullName))
                 gameNode.RemoveNode(GetType().FullName);
@@ -685,9 +685,9 @@ namespace CommNetConstellation.CommNetLayer
 
         protected override void OnLoad(ConfigNode gameNode)
         {
-            base.OnLoad(gameNode);
+            //base.OnLoad(gameNode); //unnecessary since CNM manages this at top level
 
-            if(gameNode.HasNode(GetType().FullName))
+            if (gameNode.HasNode(GetType().FullName))
                 ConfigNode.LoadObjectFromConfig(this, gameNode.GetNode(GetType().FullName));
         }
 

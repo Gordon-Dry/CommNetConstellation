@@ -50,11 +50,6 @@ namespace CommNetConstellation.CommNetLayer
             {
                 return;
             }
-            else if(CNCCommNetScenario.Instance.groundStations.Exists(x => x.ID.Equals(stockHome.nodeName)))
-            {
-                CNCLog.Verbose("CommNet Home '{0}' already exists!", stockHome.nodeName);
-                //return;
-            }
 
             CNCLog.Verbose("CommNet Home '{0}' added", stockHome.nodeName);
 
@@ -67,7 +62,6 @@ namespace CommNetConstellation.CommNetLayer
             };
 
             loadCompleted = true;
-            CNCCommNetScenario.Instance.registerGroundStation(this);
         }
 
         /// <summary>
