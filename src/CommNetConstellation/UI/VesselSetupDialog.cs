@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using CommNetConstellation.UI.VesselMgtTools;
 using CommNetManagerAPI;
+using CommNet;
 
 namespace CommNetConstellation.UI
 {
@@ -12,7 +13,8 @@ namespace CommNetConstellation.UI
     /// </summary>
     public class VesselSetupDialog : AbstractDialog
     {
-        private Vessel hostVessel; // could be null (in editor)
+        private Vessel hostVessel = null; // could be null (in editor)
+        private CNCCommNetVessel cncVessel = null;
         private string description = "Something";
 
         private const string nofreqMessage = "No active frequency to broadcast!";
@@ -32,15 +34,16 @@ namespace CommNetConstellation.UI
                                                                                                                 new DialogOptions[] {})
         {
             this.hostVessel = vessel;
+            this.cncVessel = ((IModularCommNetVessel)hostVessel.Connection).GetModuleOfType<CNCCommNetVessel>();
             this.updateCallback = updateCallback;
             this.description = string.Format("Active frequencies allow this vessel '{0}' to talk with other vessels, which share one or more of these frequencies.", this.hostVessel.vesselName);
 
             this.toolMgt = new ToolContentManagement();
-            UpdateListTool updateTool = new UpdateListTool(this.hostVessel.connection);
+            UpdateListTool updateTool = new UpdateListTool(cncVessel);
             this.toolMgt.add(updateTool);
-            AntennaTool antennaTool = new AntennaTool(this.hostVessel.connection, refreshFrequencyRows);
+            AntennaTool antennaTool = new AntennaTool(cncVessel, refreshFrequencyRows);
             this.toolMgt.add(antennaTool);
-            VanillaFreqTool vanillaTool = new VanillaFreqTool(this.hostVessel.connection, refreshFrequencyRows);
+            VanillaFreqTool vanillaTool = new VanillaFreqTool(cncVessel, refreshFrequencyRows);
             this.toolMgt.add(vanillaTool);
 
             this.nofreqMessageStyle = new UIStyle();
@@ -61,7 +64,6 @@ namespace CommNetConstellation.UI
         {
             List<DialogGUIBase> listComponments = new List<DialogGUIBase>();
 
-            CNCCommNetVessel cncVessel = (CNCCommNetVessel)this.hostVessel.Connection;
             List<short> vesselFrequencyList = cncVessel.getFrequencies();
             vesselFrequencyList.Sort();
 
@@ -96,7 +98,6 @@ namespace CommNetConstellation.UI
 
         private DialogGUIHorizontalLayout createFrequencyRow(short freq)
         {
-            CNCCommNetVessel cncVessel = (CNCCommNetVessel)this.hostVessel.Connection;
             Color color = Constellation.getColor(freq);
             string name = Constellation.getName(freq);
 
@@ -111,7 +112,6 @@ namespace CommNetConstellation.UI
         {
             deregisterLayoutComponents(frequencyRowLayout);
 
-            CNCCommNetVessel cncVessel = (CNCCommNetVessel)this.hostVessel.Connection;
             List<short> vesselFrequencyList = cncVessel.getFrequencies();
             vesselFrequencyList.Sort();
 

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using CommNet;
 using UnityEngine;
 using static CommNetConstellation.CommNetLayer.CNCCommNetVessel;
+using CommNetConstellation.CommNetLayer;
 
 namespace CommNetConstellation.UI.VesselMgtTools
 {
@@ -9,7 +9,7 @@ namespace CommNetConstellation.UI.VesselMgtTools
     {
         private UIStyle style;
 
-        public UpdateListTool(CommNetVessel thisVessel) : base(thisVessel, "updatelist", "Update List")
+        public UpdateListTool(CNCCommNetVessel thisVessel) : base(thisVessel, "updatelist", "Update List")
         {
             this.style = new UIStyle();
             this.style.alignment = TextAnchor.MiddleLeft;

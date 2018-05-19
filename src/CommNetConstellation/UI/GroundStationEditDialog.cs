@@ -125,7 +125,7 @@ namespace CommNetConstellation.UI
         /// </summary>
         private void defaultNameClick()
         {
-            nameInput.uiItem.GetComponent<TMP_InputField>().text = this.hostStation.nodeName;
+            nameInput.uiItem.GetComponent<TMP_InputField>().text = this.hostStation.CommNetHome.nodeName;
         }
 
         /// <summary>
@@ -250,7 +250,7 @@ namespace CommNetConstellation.UI
 
             if (!this.hostStation.stationName.Equals(newName)) // different name
             {
-                if(newName.Equals(this.hostStation.nodeName))
+                if(newName.Equals(this.hostStation.CommNetHome.nodeName))
                     this.hostStation.stationName = "";
                 else
                     this.hostStation.stationName = newName;

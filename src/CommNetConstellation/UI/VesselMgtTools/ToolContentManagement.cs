@@ -18,15 +18,9 @@ namespace CommNetConstellation.UI.VesselMgtTools
         public string codename;
         public string toolName;
 
-        public AbstractMgtTool(CommNetVessel thisVessel, string uniqueCodename, string toolName, List<Callback> actionCallbacks = null)
+        public AbstractMgtTool(CNCCommNetVessel thisVessel, string uniqueCodename, string toolName, List<Callback> actionCallbacks = null)
         {
-            if (!(thisVessel is CNCCommNetVessel))
-            {
-                CNCLog.Error("Vessel '{0}''s connection is not of type CNCCommNetVessel!", thisVessel.Vessel.vesselName);
-                return;
-            }
-
-            this.cncVessel = (CNCCommNetVessel)thisVessel;
+            this.cncVessel = thisVessel;
             this.codename = uniqueCodename + "_mgttool";
             this.toolName = toolName;
             this.actionCallbacks = actionCallbacks;

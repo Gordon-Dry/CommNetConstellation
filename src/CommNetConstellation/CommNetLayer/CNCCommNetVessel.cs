@@ -115,10 +115,8 @@ namespace CommNetConstellation.CommNetLayer
             }
         }
 
-        protected override void OnDestroy()
+        protected void OnDestroy()
         {
-            base.OnDestroy();
-
             if (HighLogic.CurrentGame == null)
                 return;
             //if (HighLogic.LoadedScene != GameScenes.FLIGHT)
@@ -401,11 +399,9 @@ namespace CommNetConstellation.CommNetLayer
         /// </summary>
         protected override void UpdateComm()
         {
-            base.UpdateComm();
-
-            this.comm.antennaTransmit.power = getMaxComPower(this.strongestFreq);
-            this.comm.antennaTransmit.power *= (double)HighLogic.CurrentGame.Parameters.CustomParams<CommNetParams>().rangeModifier;
-            this.comm.antennaRelay.power *= (double)HighLogic.CurrentGame.Parameters.CustomParams<CommNetParams>().rangeModifier;
+            this.CommNetVessel.Comm.antennaTransmit.power = getMaxComPower(this.strongestFreq);
+            this.CommNetVessel.Comm.antennaTransmit.power *= (double)HighLogic.CurrentGame.Parameters.CustomParams<CommNetParams>().rangeModifier;
+            this.CommNetVessel.Comm.antennaRelay.power *= (double)HighLogic.CurrentGame.Parameters.CustomParams<CommNetParams>().rangeModifier;
         }
 
         /// <summary>
@@ -679,7 +675,7 @@ namespace CommNetConstellation.CommNetLayer
 
         protected override void OnSave(ConfigNode gameNode)
         {
-            base.OnSave(gameNode);
+            //base.OnSave(gameNode); //unnecessary since CNM manages this at top level
 
             if (gameNode.HasNode(GetType().FullName))
                 gameNode.RemoveNode(GetType().FullName);
@@ -689,9 +685,9 @@ namespace CommNetConstellation.CommNetLayer
 
         protected override void OnLoad(ConfigNode gameNode)
         {
-            base.OnLoad(gameNode);
+            //base.OnLoad(gameNode); //unnecessary since CNM manages this at top level
 
-            if(gameNode.HasNode(GetType().FullName))
+            if (gameNode.HasNode(GetType().FullName))
                 ConfigNode.LoadObjectFromConfig(this, gameNode.GetNode(GetType().FullName));
         }
 

@@ -350,12 +350,10 @@ namespace CommNetConstellation.UI
 
         private void updateVesselGUIRow(Vessel updatedVessel)
         {
-            CNCCommNetVessel thisVessel = ((CommNetManagerAPI.ModularCommNetVessel)updatedVessel.Connection).GetModuleOfType<CNCCommNetVessel>();
-            //(CNCCommNetVessel)updatedVessel.Connection;
             if (this.currentContentType != ContentType.VESSELS)
                 return;
 
-            CNCCommNetVessel thisVessel = (CNCCommNetVessel)updatedVessel.Connection;
+            CNCCommNetVessel thisVessel = ((CommNetManagerAPI.IModularCommNetVessel)updatedVessel.Connection).GetModuleOfType<CNCCommNetVessel>();
             List<DialogGUIBase> rows = contentLayout.children;
 
             for (int i = 0; i < rows.Count; i++)
@@ -469,7 +467,7 @@ namespace CommNetConstellation.UI
             }
             else
             {
-                newRows.Add(createGroundStationRow(stations.Find(x => x.isKSC)));
+                newRows.Add(createGroundStationRow(stations.Find(x => x.CommNetHome.isKSC)));
             }
 
             return newRows;
@@ -513,8 +511,6 @@ namespace CommNetConstellation.UI
             if (this.currentContentType != ContentType.GROUNDSTATIONS)
                 return;
 
-            short vesselFrequency = ((CommNetManagerAPI.ModularCommNetVessel)updatedVessel.Connection).GetModuleOfType<CNCCommNetVessel>().getRadioFrequency();
-            //(updatedVessel.connection as CNCCommNetVessel).getRadioFrequency();
             List<DialogGUIBase> rows = contentLayout.children;
 
             for (int i = 1; i < rows.Count; i++)

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using CommNet;
 using UnityEngine;
 using CommNetConstellation.CommNetLayer;
 
@@ -10,7 +9,7 @@ namespace CommNetConstellation.UI.VesselMgtTools
         private DialogGUIVerticalLayout toggleAntennaColumn;
         private UIStyle style;
 
-        public AntennaTool(CommNetVessel thisVessel, Callback updateFreqRowsCallback) : base(thisVessel, "antenna", "Antennas", new List<Callback>() { updateFreqRowsCallback })
+        public AntennaTool(CNCCommNetVessel thisVessel, Callback updateFreqRowsCallback) : base(thisVessel, "antenna", "Antennas", new List<Callback>() { updateFreqRowsCallback })
         {
             this.style = new UIStyle();
             this.style.alignment = TextAnchor.MiddleLeft;
