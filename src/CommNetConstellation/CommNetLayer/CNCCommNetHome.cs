@@ -1,5 +1,6 @@
 ﻿using CommNet;
 using CommNetConstellation.UI;
+using KSP.Localization;
 using CommNetManagerAPI;
 using System;
 using System.Collections.Generic;
@@ -110,6 +111,9 @@ namespace CommNetConstellation.CommNetLayer
                 return;
 
             if ((!HighLogic.CurrentGame.Parameters.CustomParams<CommNetParams>().enableGroundStations && !this.CommNetHome.isKSC) || !MapView.MapIsEnabled || MapView.MapCamera == null)
+                return;
+
+            if (CNCCommNetScenario.Instance.hideGroundStations)
                 return;
 
             Vector3d worldPos = ScaledSpace.LocalToScaledSpace(CommNetHome.nodeTransform.transform.position);

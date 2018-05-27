@@ -2,6 +2,7 @@
 using CommNetConstellation.UI;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace CommNetConstellation.CommNetLayer
 {
@@ -85,6 +86,7 @@ namespace CommNetConstellation.CommNetLayer
         protected short strongestFreq = -1;
         protected List<CNCAntennaPartInfo> vesselAntennas = new List<CNCAntennaPartInfo>();
         protected bool stageActivated = false;
+        public bool IsCommandable = true;
 
         /// <summary>
         /// Retrieve the CNC data from the vessel
@@ -96,6 +98,16 @@ namespace CommNetConstellation.CommNetLayer
             try
             {
                 validateAndUpgrade(this.Vessel);
+
+                if (readCommandData().Count <= 0) //no probe core/command module to "process" signal
+                {
+                    this.IsCommandable = false;
+                    throw new Exception();
+                }
+                else
+                {
+                    this.IsCommandable = true;
+                }
 
                 if (this.FreqListOperation == CNCCommNetVessel.FrequencyListOperation.AutoBuild)
                 {
@@ -111,7 +123,7 @@ namespace CommNetConstellation.CommNetLayer
             }
             catch (Exception e)
             {
-                CNCLog.Error("Vessel '{0}' doesn't have any CommNet capability, likely a mislabelled junk or a kerbin on EVA", this.Vessel.GetName());
+                CNCLog.Verbose("Vessel '{0}' doesn't have any CommNet capability due to no probe core/command part or a kerbin on EVA", this.Vessel.GetName());
             }
         }
 
@@ -147,10 +159,19 @@ namespace CommNetConstellation.CommNetLayer
             {
                 CNCLog.Verbose("Active CommNet Vessel '{0}' is staged. Rebuilding the freq list on suriving antennas...", this.Vessel.vesselName);
 
-                //force-rebuild freq list to stop players from abusing LockList
-                this.vesselAntennas = this.readAntennaData();
-                this.FrequencyDict = buildFrequencyList(this.vesselAntennas);
-                this.strongestFreq = computeStrongestFrequency(this.FrequencyDict);
+                if (readCommandData().Count <= 0) //no probe core/command module to "process" signal
+                {
+                    this.IsCommandable = false;
+                }
+                else
+                {
+                    this.IsCommandable = true;
+
+                    //force-rebuild freq list to stop players from abusing LockList
+                    this.vesselAntennas = this.readAntennaData();
+                    this.FrequencyDict = buildFrequencyList(this.vesselAntennas);
+                    this.strongestFreq = computeStrongestFrequency(this.FrequencyDict);
+                }
 
                 this.stageActivated = false;
             }
@@ -249,6 +270,31 @@ namespace CommNetConstellation.CommNetLayer
             }
 
             return antennas;
+        }
+
+        /// <summary>
+        /// Read the command part data of an unloaded/loaded vessel
+        /// </summary>
+        protected List<ModuleCommand> readCommandData()
+        {
+            if(this.vessel.loaded)//quick check
+            {
+                return this.vessel.FindPartModulesImplementing<ModuleCommand>();
+            }
+
+            //manually read on unloaded vessel
+            List<ModuleCommand> cmds = new List<ModuleCommand>();
+            int numParts = this.vessel.protoVessel.protoPartSnapshots.Count;
+
+            //inspect each part
+            for (int partIndex = 0; partIndex < numParts; partIndex++)
+            {
+                ProtoPartSnapshot partSnapshot = this.vessel.protoVessel.protoPartSnapshots[partIndex];
+                Part thisPart = partSnapshot.partInfo.partPrefab;
+                cmds.AddRange(thisPart.Modules.GetModules<ModuleCommand>());
+            }
+
+            return cmds;
         }
 
         /// <summary>
@@ -453,7 +499,7 @@ namespace CommNetConstellation.CommNetLayer
                 return true;
             }
 
-            ScreenMessage msg = new ScreenMessage(string.Format("Frequency list of Vessel '{0}' is locked.", this.vessel.vesselName), CNCSettings.ScreenMessageDuration, ScreenMessageStyle.UPPER_LEFT);
+            ScreenMessage msg = new ScreenMessage(string.Format("Frequency list of Vessel '{0}' is locked.", this.vessel.GetDisplayName()), CNCSettings.ScreenMessageDuration, ScreenMessageStyle.UPPER_CENTER);
             ScreenMessages.PostScreenMessage(msg);
             CNCLog.Verbose("CommNet Vessel '{0}''s freq list is locked", this.Vessel.GetName());
             return false;
@@ -596,7 +642,7 @@ namespace CommNetConstellation.CommNetLayer
         {
             if(!partInfo.canComm) // antenna is not deployed
             {
-                ScreenMessage msg = new ScreenMessage(string.Format("Antenna '{0}' is not deployed.", partInfo.name), CNCSettings.ScreenMessageDuration, ScreenMessageStyle.UPPER_LEFT);
+                ScreenMessage msg = new ScreenMessage(string.Format("Antenna '{0}' is not deployed.", partInfo.name), CNCSettings.ScreenMessageDuration, ScreenMessageStyle.UPPER_CENTER);
                 ScreenMessages.PostScreenMessage(msg);
                 CNCLog.Verbose("Cannot set the non-deployed antenna '{0}' of CommNet vessel '{1}' to {2}", partInfo.name, this.Vessel.GetName(), inUse);
                 return;
@@ -670,6 +716,18 @@ namespace CommNetConstellation.CommNetLayer
                         }
                     }
                 } // end of part loop
+            }
+        }
+
+        /// <summary>
+        /// On-demand method to do network update manually
+        /// </summary>
+        public void computeUnloadedUpdate()
+        {
+            FieldInfo field = this.CommNetVessel.GetType().GetField("unloadedDoOnce", BindingFlags.Instance | BindingFlags.NonPublic);
+            if (field != null)
+            {
+                field.SetValue(this.CommNetVessel, true);
             }
         }
 

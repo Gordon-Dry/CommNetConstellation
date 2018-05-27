@@ -1,6 +1,7 @@
 ﻿using CommNet;
-using CommNetManagerAPI;
+using KSP.UI.Screens.Flight;
 using System;
+using CommNetManagerAPI;
 using System.Collections.Generic;
 
 namespace CommNetConstellation.CommNetLayer
@@ -21,11 +22,14 @@ namespace CommNetConstellation.CommNetLayer
 
         private CNCCommNetUI CustomCommNetUI = null;
         private CommNetNetwork CustomCommNetNetwork = null;
-        public List<Constellation> constellations; // leave the initialisation to OnLoad()
-        public List<CNCCommNetHome> groundStations; // leave the initialisation to OnLoad()
-        private List<CNCCommNetHomeData> persistentGroundStations; // leave the initialisation to OnLoad()
+        private CNCTelemetryUpdate CustomCommNetTelemetry = null;
+        private CNCCommNetUIModeButton CustomCommNetModeButton = null;
+        public List<Constellation> constellations = new List<Constellation>();
+        public List<CNCCommNetHome> groundStations = new List<CNCCommNetHome>();
+        private List<CNCCommNetHomeData> persistentGroundStations = new List<CNCCommNetHomeData>();
         private List<CNCCommNetVessel> commVessels;
         private bool dirtyCommNetVesselList;
+        public bool hideGroundStations;
 
         public static new CNCCommNetScenario Instance
         {
@@ -55,11 +59,29 @@ namespace CommNetConstellation.CommNetLayer
             //Request for CommNet network
             CommNetManagerChecker.SetCommNetManagerIfAvailable(this, typeof(CNCCommNetNetwork), out CustomCommNetNetwork);
 
+            //Replace the TelemetryUpdate
+            TelemetryUpdate tel = TelemetryUpdate.Instance; //only appear in flight
+            CommNetUIModeButton cnmodeUI = FindObjectOfType<CommNetUIModeButton>(); //only appear in tracking station; initialised separately by TelemetryUpdate in flight
+            if (tel != null && HighLogic.LoadedSceneIsFlight)
+            {
+                TelemetryUpdateData tempData = new TelemetryUpdateData(tel);
+                UnityEngine.Object.DestroyImmediate(tel); //seem like UE won't initialise CNCTelemetryUpdate instance in presence of TelemetryUpdate instance
+                CustomCommNetTelemetry = gameObject.AddComponent<CNCTelemetryUpdate>();
+                CustomCommNetTelemetry.copyOf(tempData);
+            }
+            else if(cnmodeUI != null && HighLogic.LoadedScene == GameScenes.TRACKSTATION)
+            {
+                CustomCommNetModeButton = cnmodeUI.gameObject.AddComponent<CNCCommNetUIModeButton>();
+                CustomCommNetModeButton.copyOf(cnmodeUI);
+                UnityEngine.Object.DestroyImmediate(cnmodeUI);
+            }
+
             //Request for CommNetManager instance
             ICommNetManager CNM = (ICommNetManager)CommNetManagerChecker.GetCommNetManagerInstance();
             CNM.SetCommNetTypes();
 
             //Obtain ground stations
+            groundStations.Clear();
             for (int i = 0; i < CNM.Homes.Count; i++)
             {
                 var cncHome = CNM.Homes[i].Components.Find(x => x is CNCCommNetHome) as CNCCommNetHome;
@@ -98,10 +120,13 @@ namespace CommNetConstellation.CommNetLayer
             if (this.CustomCommNetNetwork != null)
                 UnityEngine.Object.Destroy(this.CustomCommNetNetwork);
 
-            this.constellations.Clear();
+            if (this.CustomCommNetTelemetry != null)
+                UnityEngine.Object.Destroy(this.CustomCommNetTelemetry);
+
+            if (this.CustomCommNetModeButton != null)
+                UnityEngine.Object.Destroy(this.CustomCommNetModeButton);
+
             this.commVessels.Clear();
-            this.groundStations.Clear();
-            this.persistentGroundStations.Clear();
 
             GameEvents.onVesselCreate.Remove(new EventData<Vessel>.OnEvent(this.onVesselCountChanged));
             GameEvents.onVesselDestroy.Remove(new EventData<Vessel>.OnEvent(this.onVesselCountChanged));
@@ -111,6 +136,25 @@ namespace CommNetConstellation.CommNetLayer
         {
             base.OnLoad(gameNode);
             CNCLog.Verbose("Scenario content to be read:\n{0}", gameNode);
+
+            //Other variables
+            for (int i = 0; i < gameNode.values.Count; i++)
+            {
+                ConfigNode.Value value = gameNode.values[i];
+                string name = value.name;
+                switch (name)
+                {
+                    case "DisplayModeTracking":
+                        CNCCommNetUI.CustomModeTrackingStation = (CNCCommNetUI.CustomDisplayMode)((int)Enum.Parse(typeof(CNCCommNetUI.CustomDisplayMode), value.value));
+                        break;
+                    case "DisplayModeFlight":
+                        CNCCommNetUI.CustomModeFlightMap = (CNCCommNetUI.CustomDisplayMode)((int)Enum.Parse(typeof(CNCCommNetUI.CustomDisplayMode), value.value));
+                        break;
+                    case "HideGroundStations":
+                        this.hideGroundStations = Boolean.Parse(value.value);
+                        break;
+                }
+            }
 
             //Constellations
             if (gameNode.HasNode("Constellations"))
@@ -125,8 +169,7 @@ namespace CommNetConstellation.CommNetLayer
                 }
                 else
                 {
-                    constellations = new List<Constellation>();
-
+                    constellations.Clear();
                     for (int i = 0; i < constellationNodes.Length; i++)
                     {
                         Constellation newConstellation = new Constellation();
@@ -144,8 +187,6 @@ namespace CommNetConstellation.CommNetLayer
             constellations.Sort();
 
             //Ground stations
-            groundStations = new List<CNCCommNetHome>();
-            persistentGroundStations = new List<CNCCommNetHomeData>();
             if (gameNode.HasNode("GroundStations"))
             {
                 ConfigNode stationNode = gameNode.GetNode("GroundStations");
@@ -158,6 +199,7 @@ namespace CommNetConstellation.CommNetLayer
                 }
                 else
                 {
+                    persistentGroundStations.Clear();
                     for (int i = 0; i < stationNodes.Length; i++)
                     {
                         CNCCommNetHomeData stationData = new CNCCommNetHomeData();
@@ -166,7 +208,7 @@ namespace CommNetConstellation.CommNetLayer
                         {
                             stationData.Frequencies.Clear();// clear the default frequency list
                         }
-                        persistentGroundStations.Add(stationData);
+                        persistentGroundStations.Add(stationData);//CNM's homes are not available at this point
                     }
                 }
             }
@@ -179,6 +221,11 @@ namespace CommNetConstellation.CommNetLayer
 
         public override void OnSave(ConfigNode gameNode)
         {
+            //Other variables
+            gameNode.AddValue("DisplayModeTracking", CNCCommNetUI.CustomModeTrackingStation);
+            gameNode.AddValue("DisplayModeFlight", CNCCommNetUI.CustomModeFlightMap);
+            gameNode.AddValue("HideGroundStations", this.hideGroundStations);
+
             //Constellations
             if (gameNode.HasNode("Constellations"))
             {
@@ -186,7 +233,7 @@ namespace CommNetConstellation.CommNetLayer
             }
 
             ConfigNode constellationNode = new ConfigNode("Constellations");
-            for (int i=0; i<constellations.Count; i++)
+            for (int i = 0; i < constellations.Count; i++)
             {
                 ConfigNode newConstellationNode = new ConfigNode("Constellation");
                 newConstellationNode = ConfigNode.CreateConfigFromObject(constellations[i], newConstellationNode);
@@ -279,7 +326,7 @@ namespace CommNetConstellation.CommNetLayer
             List<Vessel> allVessels = FlightGlobals.fetch.vessels;
             for (int i = 0; i < allVessels.Count; i++)
             {
-                if (allVessels[i].connection != null && allVessels[i].vesselType != VesselType.Unknown)// && allVessels[i].vesselType != VesselType.Debris) // debris could be spent stage with functional probes and antennas
+                if (allVessels[i].connection != null && (allVessels[i].connection as IModularCommNetVessel).GetModuleOfType<CNCCommNetVessel>().IsCommandable && allVessels[i].vesselType != VesselType.Unknown)// && allVessels[i].vesselType != VesselType.Debris) // debris could be spent stage with functional probes and antennas
                 {
                     CNCLog.Debug("Caching CommNetVessel '{0}'", allVessels[i].vesselName);
                     this.commVessels.Add(((IModularCommNetVessel)allVessels[i].connection).GetModuleOfType<CNCCommNetVessel>());
